@@ -1,26 +1,22 @@
 from pathlib import Path
 
-import dash
 import dash_bootstrap_components as dbc
-from dash import dcc, html
+from dash import Dash, dcc, html
 
 
-class DashAIChat(dash.Dash):
-    def __init__(
-        self, name=__name__, external_stylesheets=None, chat_config=None, **kwargs
-    ):
+class DashAIChat(Dash):
+    def __init__(self, name=__name__, external_stylesheets=None, **kwargs):
         if external_stylesheets is None:
             external_stylesheets = [dbc.themes.BOOTSTRAP]
         super().__init__(name, external_stylesheets=external_stylesheets, **kwargs)
-        self.chat_config = chat_config or {}
         self.required_ids = {
-            "burger-menu",
-            "sidebar-offcanvas",
-            "conversation-list",
+            "burger_menu",
+            "sidebar_offcanvas",
+            "conversation_list",
             "url",
             "chat_area_div",
             "user_input_textarea",
-            "new-chat-button",
+            "new_chat_button",
         }
         self.BASE_DIR = Path("")
         self.AI_REGISTRY = {
@@ -47,8 +43,8 @@ class DashAIChat(dash.Dash):
         }
         self.layout = self.default_layout()
         self._validate_layout()
-        self._register_callbacks()
-        self._register_clientside_callbacks()
+        # self._register_callbacks()
+        # self._register_clientside_callbacks()
 
     # --- Layout Factories ---
     def sidebar(self):
@@ -59,24 +55,19 @@ class DashAIChat(dash.Dash):
                         html.I(className="bi bi-pencil-square icon-new-chat"),
                         " New chat",
                     ],
-                    id="new-chat-button",
+                    id="new_chat_button",
                     className="mb-3 w-100",
                 ),
                 html.Div(
-                    id="conversation-list",
+                    id="conversation_list",
                     children=[],
-                    className="conversation-list",
                 ),
             ],
-            id="sidebar-offcanvas",
+            id="sidebar_offcanvas",
             title="Conversations",
             is_open=False,
             placement="start",
         )
-
-    @property
-    def sidebar_string(self):
-        return 'html.Div([...], id="sidebar-offcanvas", className="offcanvas offcanvas-start sidebar-offcanvas")'
 
     def chat_area(self):
         return html.Div(
@@ -84,10 +75,6 @@ class DashAIChat(dash.Dash):
             children=[],
             className="chat-area-div",
         )
-
-    @property
-    def chat_area_string(self):
-        return 'html.Div(id="chat_area_div", className="chat-area-div")'
 
     def input_area(self):
         return html.Div(
@@ -102,16 +89,12 @@ class DashAIChat(dash.Dash):
             ]
         )
 
-    @property
-    def input_area_string(self):
-        return 'dcc.Textarea(id="user_input_textarea", className="form-control user-input-textarea")'
-
     def default_layout(self):
         return html.Div(
             [
                 html.Button(
                     "☰",
-                    id="burger-menu",
+                    id="burger_menu",
                     className="burger-menu btn btn-outline-secondary",
                 ),
                 self.sidebar(),
@@ -137,10 +120,6 @@ class DashAIChat(dash.Dash):
                 ),
             ]
         )
-
-    @property
-    def default_layout_string(self):
-        return 'html.Div([...], className="main-app-div")'
 
     def _validate_layout(self):
         def collect_ids(component):
