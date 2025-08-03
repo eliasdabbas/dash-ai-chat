@@ -62,6 +62,7 @@ if __name__ == "__main__":
 - We use `uv` for all project and package management tasks
 - We run everything using `uv run <module.py>` instead of `python <module.py>`
 - Don't worry at all about linting or formatting. This is completely handled by ruff, and is automatically done on save.
+- Comments should be included if they explain *why* something is done or clarify a complicated scenario with a simple example. We don't write comments to explain what is being done. The code should be clear.
 
 ## Source control and git guidelines
 
