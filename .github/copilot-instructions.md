@@ -20,7 +20,7 @@ pip install dash-ai-chat
 
 from dash_ai_chat import DashAIChat
 
-app = DashAIChat()
+app = DashAIChat(base_dir=<YOUR-BASE-DIRECTORY>)
 
 # a default layout is provided but can be customized
 
