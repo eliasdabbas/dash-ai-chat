@@ -1,0 +1,72 @@
+/* Burger menu button */
+.burger-menu {
+    position: fixed;
+    top: 20px;
+    left: 5%;
+    z-index: 1000;
+    font-size: 44px;
+    background: none;
+    border: none;
+}
+
+/* Sidebar offcanvas */
+.sidebar-offcanvas {
+    width: 20% !important;
+    min-width: 220px;
+    max-width: 340px;
+}
+
+@media (max-width: 1200px) {
+    .sidebar-offcanvas {
+        width: 28% !important;
+        min-width: 180px;
+        max-width: 300px;
+    }
+}
+
+@media (max-width: 768px) {
+    .sidebar-offcanvas {
+        width: 70% !important;
+        min-width: 120px;
+        max-width: 100vw;
+    }
+}
+
+/* New chat button */
+.new-chat-button {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    font-size: 1.12rem;
+    margin-top: 1rem;
+    margin-bottom: 2rem;
+}
+
+/* Conversation list */
+.conversation-list {
+    font-size: 1.12rem;
+    line-height: 1.2;
+}
+
+/* Chat area div */
+.chat-area-div {
+    overflow-y: auto;
+    height: 80vh;
+    margin-bottom: 1rem;
+    line-height: 1.6;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+
+/* User input textarea */
+.user-input-textarea {
+    border-radius: 20px 20px 20px 20px;
+}
+
+/* Main container */
+.main-container {
+    width: 60%;
+    margin: 0 auto;
+    font-size: 1.12rem;
+}
