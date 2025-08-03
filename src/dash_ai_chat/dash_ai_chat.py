@@ -17,8 +17,9 @@ class DashAIChat(Dash):
         if "external_stylesheets" not in kwargs:
             kwargs["external_stylesheets"] = [dbc.themes.BOOTSTRAP, dbc.icons.BOOTSTRAP]
 
+        assets_path = (Path(__file__).parent / "assets").absolute()
         if "assets_folder" not in kwargs:
-            kwargs["assets_folder"] = str(Path(__file__).parent / "assets")
+            kwargs["assets_folder"] = str(assets_path)
 
         super().__init__(
             __name__,
@@ -72,17 +73,19 @@ class DashAIChat(Dash):
                         " New chat",
                     ],
                     id="new_chat_button",
-                    className="mb-3 w-100",
+                    className="new-chat-button",
                 ),
                 html.Div(
                     id="conversation_list",
                     children=[],
+                    className="conversation-list",
                 ),
             ],
             id="sidebar_offcanvas",
-            title="Conversations",
             is_open=False,
+            backdrop=False,
             placement="start",
+            className="sidebar-offcanvas",
         )
 
     def chat_area(self):
@@ -111,7 +114,7 @@ class DashAIChat(Dash):
                 html.Button(
                     "☰",
                     id="burger_menu",
-                    className="burger-menu btn btn-outline-secondary",
+                    className="burger-menu",
                 ),
                 self.sidebar(),
                 dcc.Location(id="url", refresh=False),
@@ -121,7 +124,16 @@ class DashAIChat(Dash):
                         html.Div(
                             [
                                 html.Div(
-                                    [dcc.Loading(self.chat_area(), type="circle")],
+                                    [
+                                        dcc.Loading(
+                                            self.chat_area(),
+                                            type="circle",
+                                            overlay_style={
+                                                "visibility": "visible",
+                                                "filter": "blur(0.7px)",
+                                            },
+                                        )
+                                    ],
                                     className="col",
                                 )
                             ],
@@ -374,6 +386,29 @@ class DashAIChat(Dash):
                     )
                 )
             return conversation_items
+
+        @self.callback(
+            Output("url", "pathname", allow_duplicate=True),
+            Output("sidebar_offcanvas", "is_open", allow_duplicate=True),
+            Input("new_chat_button", "n_clicks"),
+            State("url", "pathname"),
+            prevent_initial_call=True,
+        )
+        def handle_new_chat(n_clicks, current_pathname):
+            if n_clicks:
+                import uuid
+
+                segments = (current_pathname or "/").strip("/").split("/")
+                user_id = (
+                    segments[0] if segments and segments[0] else str(uuid.uuid4())[:5]
+                )
+
+                engine_user_id = f"chat_data/{user_id}"
+                next_convo_id = self.get_next_convo_id(engine_user_id)
+                new_path = f"/{user_id}/{next_convo_id}"
+
+                return new_path, False
+            return no_update, no_update
 
     def _register_clientside_callbacks(self):
         self.clientside_callback(
