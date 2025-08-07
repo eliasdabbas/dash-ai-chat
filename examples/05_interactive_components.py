@@ -94,9 +94,7 @@ Keep response concise - aim for 2-3 sentences per section.
 
 Start your response with the heading "# The Color {selected_color.title()}" """
 
-    new_submit_count = int(str(uuid.uuid4()).replace("-", "")[:8], 16) % 1000
-
-    return color_message, new_submit_count
+    return color_message, 1
 
 
 if __name__ == "__main__":
