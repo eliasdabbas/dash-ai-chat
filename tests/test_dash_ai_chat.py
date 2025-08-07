@@ -100,17 +100,17 @@ class TestAIProviderInterface:
     def test_fetch_ai_response_unknown_provider(self, app_with_temp_dir):
         messages = [{"role": "user", "content": "Hello"}]
 
-        with pytest.raises(ValueError, match="Unknown provider/endpoint"):
+        with pytest.raises(ValueError, match="Unknown provider spec"):
             app_with_temp_dir.fetch_ai_response(
-                messages, model="gpt-4o", provider="unknown", endpoint="unknown"
+                messages, model="gpt-4o", provider_spec="unknown:unknown"
             )
 
     def test_extract_assistant_content_unknown_provider(self, app_with_temp_dir):
         raw_response = {"choices": [{"message": {"content": "Hello!"}}]}
 
-        with pytest.raises(ValueError, match="Unknown provider/endpoint"):
+        with pytest.raises(ValueError, match="Unknown provider spec"):
             app_with_temp_dir.extract_assistant_content(
-                raw_response, provider="unknown", endpoint="unknown"
+                raw_response, provider_spec="unknown:unknown"
             )
 
     @patch.dict("os.environ", {"OPENAI_API_KEY": "test-key"})
@@ -122,24 +122,34 @@ class TestAIProviderInterface:
             "choices": [{"message": {"content": "Hello there!"}}]
         }
 
-        with patch.object(
-            app.client.chat.completions, "create", return_value=mock_response
-        ):
+        client_mock = Mock()
+        client_mock.chat.completions.create.return_value = mock_response
+
+        # Create a mock provider instance
+        mock_provider = Mock()
+        mock_provider.client_factory.return_value = client_mock
+        mock_provider.call.return_value = mock_response
+        mock_provider.extract.return_value = "Hello there!"
+        mock_provider.format_messages.return_value = [
+            {"role": "user", "content": "Hello"}
+        ]
+
+        with patch.dict(app.AI_REGISTRY, {"openai:chat.completions": mock_provider}):
             messages = [{"role": "user", "content": "Hello"}]
             result = app.fetch_ai_response(
-                messages, model="gpt-4o", provider="openai", endpoint="chat.completions"
+                messages, model="gpt-4o", provider_spec="openai:chat.completions"
             )
 
             assert result == {"choices": [{"message": {"content": "Hello there!"}}]}
-            app.client.chat.completions.create.assert_called_once_with(
-                model="gpt-4o", messages=[{"role": "user", "content": "Hello"}]
+            mock_provider.call.assert_called_once_with(
+                client_mock, [{"role": "user", "content": "Hello"}], "gpt-4o"
             )
 
     def test_extract_assistant_content_openai(self, app_with_temp_dir):
         raw_response = {"choices": [{"message": {"content": "Hello there!"}}]}
 
         result = app_with_temp_dir.extract_assistant_content(
-            raw_response, provider="openai", endpoint="chat.completions"
+            raw_response, provider_spec="openai:chat.completions"
         )
         assert result == "Hello there!"
 
@@ -227,9 +237,17 @@ class TestConversationFlow:
             "choices": [{"message": {"content": "Hello there!"}}]
         }
 
-        with patch.object(
-            app.client.chat.completions, "create", return_value=mock_response
-        ):
+        client_mock = Mock()
+        client_mock.chat.completions.create.return_value = mock_response
+
+        # Create a mock provider instance
+        mock_provider = Mock()
+        mock_provider.client_factory.return_value = client_mock
+        mock_provider.call.return_value = mock_response
+        mock_provider.extract.return_value = "Hello there!"
+        mock_provider.format_messages.side_effect = lambda x: x  # Return messages as-is
+
+        with patch.dict(app.AI_REGISTRY, {"openai:chat.completions": mock_provider}):
             result = app.update_convo("alice", "Hello AI")
 
             assert result == "001"
@@ -257,9 +275,17 @@ class TestConversationFlow:
             "choices": [{"message": {"content": "Second response"}}]
         }
 
-        with patch.object(
-            app.client.chat.completions, "create", return_value=mock_response
-        ):
+        client_mock = Mock()
+        client_mock.chat.completions.create.return_value = mock_response
+
+        # Create a mock provider instance
+        mock_provider = Mock()
+        mock_provider.client_factory.return_value = client_mock
+        mock_provider.call.return_value = mock_response
+        mock_provider.extract.return_value = "Second response"
+        mock_provider.format_messages.side_effect = lambda x: x  # Return messages as-is
+
+        with patch.dict(app.AI_REGISTRY, {"openai:chat.completions": mock_provider}):
             result = app.update_convo("alice", "Second message", convo_id="002")
 
             assert result == "002"
@@ -281,16 +307,26 @@ class TestConversationFlow:
             "choices": [{"message": {"content": "Provider response"}}]
         }
 
-        with patch.object(
-            app.client.chat.completions, "create", return_value=mock_response
-        ):
-            result = app.update_convo("alice", "Test", provider="openai")
+        client_mock = Mock()
+        client_mock.chat.completions.create.return_value = mock_response
+
+        # Create a mock provider instance
+        mock_provider = Mock()
+        mock_provider.client_factory.return_value = client_mock
+        mock_provider.call.return_value = mock_response
+        mock_provider.extract.return_value = "Provider response"
+        mock_provider.format_messages.side_effect = lambda x: x
+
+        with patch.dict(app.AI_REGISTRY, {"openai:chat.completions": mock_provider}):
+            result = app.update_convo(
+                "alice", "Test", provider_spec="openai:chat.completions"
+            )
 
             assert result == "001"
 
-            app.client.chat.completions.create.assert_called_once()
-            call_args = app.client.chat.completions.create.call_args
-            assert call_args[1]["model"] == "gpt-4o"
+            mock_provider.call.assert_called_once()
+            call_args = mock_provider.call.call_args
+            assert call_args[0][2] == "gpt-4o"  # model is 3rd argument
 
     def test_get_conversation_titles(self, app_with_temp_dir):
         messages1 = [
