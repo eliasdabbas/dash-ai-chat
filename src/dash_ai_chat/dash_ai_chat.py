@@ -1,15 +1,13 @@
 import datetime
 import json
-import os
 import unicodedata
 from pathlib import Path
 from typing import Any, Dict, Iterator, List, Optional
 
 import dash_bootstrap_components as dbc
 from dash import ALL, Dash, Input, Output, State, callback_context, dcc, html, no_update
-from openai import OpenAI
 
-Dash()
+from .providers import build_default_registry
 
 
 class DashAIChat(Dash):
@@ -34,30 +32,8 @@ class DashAIChat(Dash):
             "user_input_textarea",
             "new_chat_button",
         }
-        self.client = OpenAI(api_key=os.environ["OPENAI_API_KEY"])
         self.BASE_DIR = Path(base_dir)
-        self.AI_REGISTRY = {
-            ("openai", "chat.completions"): {
-                "call": lambda messages,
-                model,
-                **kwargs: self.client.chat.completions.create(
-                    model=model, messages=messages, **kwargs
-                ),
-                "extract": lambda resp: resp["choices"][0]["message"]["content"],
-                "format_messages": lambda history: [
-                    {"role": m["role"], "content": m["content"]} for m in history
-                ],
-            },
-            ("openai", "completions"): {
-                "call": lambda prompt, model, **kwargs: self.client.completions.create(
-                    model=model, prompt=prompt, **kwargs
-                ),
-                "extract": lambda resp: resp["choices"][0]["text"],
-                "format_messages": lambda history: "\n".join(
-                    f"{m['role']}: {m['content']}" for m in history
-                ),
-            },
-        }
+        self.AI_REGISTRY = build_default_registry()
         self.layout = self.default_layout()
         self._validate_layout()
         self._register_callbacks()
@@ -251,39 +227,36 @@ class DashAIChat(Dash):
         self,
         messages: List[Dict],
         model: str,
-        provider: str = "openai",
-        endpoint: str = "chat.completions",
+        provider_spec: str = "openai:chat.completions",
         **kwargs,
     ) -> Dict:
-        key = (provider, endpoint)
-        if key not in self.AI_REGISTRY:
-            raise ValueError(f"Unknown provider/endpoint: {provider}/{endpoint}")
+        if provider_spec not in self.AI_REGISTRY:
+            raise ValueError(f"Unknown provider spec: {provider_spec}")
         if not model:
             raise ValueError("Model must be specified explicitly.")
-        call_fn = self.AI_REGISTRY[key]["call"]
-        format_fn = self.AI_REGISTRY[key]["format_messages"]
-        resp = call_fn(format_fn(messages), model, **kwargs)
+
+        provider = self.AI_REGISTRY[provider_spec]
+        client = provider.client_factory()
+        formatted_messages = provider.format_messages(messages)
+        resp = provider.call(client, formatted_messages, model, **kwargs)
         return resp.model_dump() if hasattr(resp, "model_dump") else resp
 
     def extract_assistant_content(
         self,
         raw_response: Dict,
-        provider: str = "openai",
-        endpoint: str = "chat.completions",
+        provider_spec: str = "openai:chat.completions",
     ) -> str:
-        key = (provider, endpoint)
-        if key not in self.AI_REGISTRY:
-            raise ValueError(f"Unknown provider/endpoint: {provider}/{endpoint}")
-        extract_fn = self.AI_REGISTRY[key]["extract"]
-        return extract_fn(raw_response)
+        if provider_spec not in self.AI_REGISTRY:
+            raise ValueError(f"Unknown provider spec: {provider_spec}")
+        provider = self.AI_REGISTRY[provider_spec]
+        return provider.extract(raw_response)
 
     def update_convo(
         self,
         user_id: str,
         user_message: str,
         convo_id: Optional[str] = None,
-        provider: str = "openai",
-        endpoint: str = "chat.completions",
+        provider_spec: str = "openai:chat.completions",
     ) -> str:
         convo_id = convo_id or self.get_next_convo_id(user_id)
         user_msg = {"role": "user", "content": user_message}
@@ -292,13 +265,10 @@ class DashAIChat(Dash):
         raw_response = self.fetch_ai_response(
             history,
             model="gpt-4o",
-            provider=provider,
-            endpoint=endpoint,
+            provider_spec=provider_spec,
         )
         self.append_raw_response(user_id, convo_id, raw_response)
-        assistant_content = self.extract_assistant_content(
-            raw_response, provider, endpoint
-        )
+        assistant_content = self.extract_assistant_content(raw_response, provider_spec)
         assistant_msg = {"role": "assistant", "content": assistant_content}
         self.add_message(user_id, convo_id, assistant_msg)
         return convo_id
