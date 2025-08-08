@@ -11,7 +11,13 @@ from .providers import build_default_registry
 
 
 class DashAIChat(Dash):
-    def __init__(self, base_dir, **kwargs):
+    def __init__(
+        self,
+        base_dir,
+        provider_spec="openai:chat.completions",
+        provider_model="gpt-4o",
+        **kwargs,
+    ):
         if "external_stylesheets" not in kwargs:
             kwargs["external_stylesheets"] = [dbc.themes.BOOTSTRAP, dbc.icons.BOOTSTRAP]
 
@@ -34,6 +40,8 @@ class DashAIChat(Dash):
         }
         self.BASE_DIR = Path(base_dir)
         self.AI_REGISTRY = build_default_registry()
+        self.provider_spec = provider_spec
+        self.provider_model = provider_model
         self.layout = self.default_layout()
         self._validate_layout()
         self._register_callbacks()
@@ -226,19 +234,23 @@ class DashAIChat(Dash):
     def fetch_ai_response(
         self,
         messages: List[Dict],
-        model: str,
-        provider_spec: str = "openai:chat.completions",
+        provider_spec: Optional[str] = None,
+        provider_model: Optional[str] = None,
         **kwargs,
     ) -> Dict:
+        # Use instance defaults if not provided
+        provider_spec = provider_spec or self.provider_spec
+        provider_model = provider_model or self.provider_model
+
         if provider_spec not in self.AI_REGISTRY:
             raise ValueError(f"Unknown provider spec: {provider_spec}")
-        if not model:
+        if not provider_model:
             raise ValueError("Model must be specified explicitly.")
 
         provider = self.AI_REGISTRY[provider_spec]
         client = provider.client_factory()
         formatted_messages = provider.format_messages(messages)
-        resp = provider.call(client, formatted_messages, model, **kwargs)
+        resp = provider.call(client, formatted_messages, provider_model, **kwargs)
         return resp.model_dump() if hasattr(resp, "model_dump") else resp
 
     def extract_assistant_content(
@@ -256,16 +268,21 @@ class DashAIChat(Dash):
         user_id: str,
         user_message: str,
         convo_id: Optional[str] = None,
-        provider_spec: str = "openai:chat.completions",
+        provider_spec: Optional[str] = None,
+        provider_model: Optional[str] = None,
     ) -> str:
+        # Use instance defaults if not provided
+        provider_spec = provider_spec or self.provider_spec
+        provider_model = provider_model or self.provider_model
+
         convo_id = convo_id or self.get_next_convo_id(user_id)
         user_msg = {"role": "user", "content": user_message}
         self.add_message(user_id, convo_id, user_msg)
         history = self.load_messages(user_id, convo_id)
         raw_response = self.fetch_ai_response(
             history,
-            model="gpt-4o",
             provider_spec=provider_spec,
+            provider_model=provider_model,
         )
         self.append_raw_response(user_id, convo_id, raw_response)
         assistant_content = self.extract_assistant_content(raw_response, provider_spec)
