@@ -137,7 +137,9 @@ class TestAIProviderInterface:
         with patch.dict(app.AI_REGISTRY, {"openai:chat.completions": mock_provider}):
             messages = [{"role": "user", "content": "Hello"}]
             result = app.fetch_ai_response(
-                messages, model="gpt-4o", provider_spec="openai:chat.completions"
+                messages,
+                provider_spec="openai:chat.completions",
+                provider_model="gpt-4o",
             )
 
             assert result == {"choices": [{"message": {"content": "Hello there!"}}]}
@@ -369,3 +371,169 @@ class TestConversationFlow:
         assert result[0]["id"] == "001"
         assert result[0]["title"] == "This is a very long message th..."
         assert len(result[0]["title"]) == 33  # 30 chars + "..."
+
+
+class TestProviderConfiguration:
+    def test_constructor_defaults(self, temp_dir):
+        app = DashAIChat(base_dir=temp_dir)
+
+        assert app.provider_spec == "openai:chat.completions"
+        assert app.provider_model == "gpt-4o"
+
+    def test_constructor_custom_provider_spec(self, temp_dir):
+        app = DashAIChat(base_dir=temp_dir, provider_spec="anthropic:chat.completions")
+
+        assert app.provider_spec == "anthropic:chat.completions"
+        assert app.provider_model == "gpt-4o"  # Still uses default model
+
+    def test_constructor_custom_provider_model(self, temp_dir):
+        app = DashAIChat(base_dir=temp_dir, provider_model="gpt-3.5-turbo")
+
+        assert app.provider_spec == "openai:chat.completions"  # Still uses default spec
+        assert app.provider_model == "gpt-3.5-turbo"
+
+    def test_constructor_custom_both(self, temp_dir):
+        app = DashAIChat(
+            base_dir=temp_dir,
+            provider_spec="anthropic:chat.completions",
+            provider_model="claude-3-5-sonnet-20241022",
+        )
+
+        assert app.provider_spec == "anthropic:chat.completions"
+        assert app.provider_model == "claude-3-5-sonnet-20241022"
+
+    def test_runtime_attribute_modification(self, temp_dir):
+        app = DashAIChat(base_dir=temp_dir)
+
+        # Verify defaults
+        assert app.provider_spec == "openai:chat.completions"
+        assert app.provider_model == "gpt-4o"
+
+        # Modify at runtime
+        app.provider_spec = "gemini:chat.completions"
+        app.provider_model = "gemini-2.5-flash"
+
+        # Verify changes
+        assert app.provider_spec == "gemini:chat.completions"
+        assert app.provider_model == "gemini-2.5-flash"
+
+    @patch.dict("os.environ", {"OPENAI_API_KEY": "test-key"})
+    def test_fetch_ai_response_uses_instance_defaults(self, temp_dir):
+        app = DashAIChat(
+            base_dir=temp_dir,
+            provider_spec="openai:chat.completions",
+            provider_model="gpt-3.5-turbo",
+        )
+
+        mock_response = Mock()
+        mock_response.model_dump.return_value = {
+            "choices": [{"message": {"content": "Response"}}]
+        }
+
+        mock_provider = Mock()
+        mock_provider.client_factory.return_value = Mock()
+        mock_provider.call.return_value = mock_response
+        mock_provider.format_messages.return_value = [
+            {"role": "user", "content": "Test"}
+        ]
+
+        with patch.dict(app.AI_REGISTRY, {"openai:chat.completions": mock_provider}):
+            messages = [{"role": "user", "content": "Test"}]
+            app.fetch_ai_response(
+                messages
+            )  # No parameters - should use instance defaults
+
+            # Verify it was called with instance defaults
+            mock_provider.call.assert_called_once()
+            call_args = mock_provider.call.call_args[0]
+            assert call_args[2] == "gpt-3.5-turbo"  # provider_model is 3rd argument
+
+    @patch.dict("os.environ", {"OPENAI_API_KEY": "test-key"})
+    def test_fetch_ai_response_parameter_override(self, temp_dir):
+        app = DashAIChat(
+            base_dir=temp_dir,
+            provider_spec="openai:chat.completions",
+            provider_model="gpt-3.5-turbo",
+        )
+
+        mock_response = Mock()
+        mock_response.model_dump.return_value = {
+            "choices": [{"message": {"content": "Response"}}]
+        }
+
+        mock_provider = Mock()
+        mock_provider.client_factory.return_value = Mock()
+        mock_provider.call.return_value = mock_response
+        mock_provider.format_messages.return_value = [
+            {"role": "user", "content": "Test"}
+        ]
+
+        with patch.dict(app.AI_REGISTRY, {"openai:chat.completions": mock_provider}):
+            messages = [{"role": "user", "content": "Test"}]
+            # Override the instance default with parameter
+            app.fetch_ai_response(messages, provider_model="gpt-4o")
+
+            # Verify it was called with the override parameter
+            mock_provider.call.assert_called_once()
+            call_args = mock_provider.call.call_args[0]
+            assert call_args[2] == "gpt-4o"  # provider_model is 3rd argument
+
+    @patch.dict("os.environ", {"OPENAI_API_KEY": "test-key"})
+    def test_update_convo_uses_instance_defaults(self, temp_dir):
+        app = DashAIChat(
+            base_dir=temp_dir,
+            provider_spec="openai:chat.completions",
+            provider_model="gpt-3.5-turbo",
+        )
+
+        mock_response = Mock()
+        mock_response.model_dump.return_value = {
+            "choices": [{"message": {"content": "Hello there!"}}]
+        }
+
+        mock_provider = Mock()
+        mock_provider.client_factory.return_value = Mock()
+        mock_provider.call.return_value = mock_response
+        mock_provider.extract.return_value = "Hello there!"
+        mock_provider.format_messages.side_effect = lambda x: x
+
+        with patch.dict(app.AI_REGISTRY, {"openai:chat.completions": mock_provider}):
+            app.update_convo("alice", "Hello")
+
+            # Verify it was called with instance defaults
+            mock_provider.call.assert_called_once()
+            call_args = mock_provider.call.call_args[0]
+            assert call_args[2] == "gpt-3.5-turbo"  # provider_model is 3rd argument
+
+    @patch.dict("os.environ", {"OPENAI_API_KEY": "test-key"})
+    def test_update_convo_parameter_override(self, temp_dir):
+        app = DashAIChat(
+            base_dir=temp_dir,
+            provider_spec="openai:chat.completions",
+            provider_model="gpt-3.5-turbo",
+        )
+
+        mock_response = Mock()
+        mock_response.model_dump.return_value = {
+            "choices": [{"message": {"content": "Hello there!"}}]
+        }
+
+        mock_provider = Mock()
+        mock_provider.client_factory.return_value = Mock()
+        mock_provider.call.return_value = mock_response
+        mock_provider.extract.return_value = "Hello there!"
+        mock_provider.format_messages.side_effect = lambda x: x
+
+        with patch.dict(app.AI_REGISTRY, {"openai:chat.completions": mock_provider}):
+            # Override both provider_spec and provider_model
+            app.update_convo(
+                "alice",
+                "Hello",
+                provider_spec="openai:chat.completions",
+                provider_model="gpt-4o",
+            )
+
+            # Verify it was called with override parameters
+            mock_provider.call.assert_called_once()
+            call_args = mock_provider.call.call_args[0]
+            assert call_args[2] == "gpt-4o"  # provider_model is 3rd argument
