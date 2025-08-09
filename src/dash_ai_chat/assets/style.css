@@ -5,8 +5,9 @@
     left: 5%;
     z-index: 1000;
     font-size: 44px;
-    background: none;
+    background: var(--bs-body-bg) !important;
     border: none;
+    padding: 4px 6px;
 }
 
 /* Sidebar offcanvas */

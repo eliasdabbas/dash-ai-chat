@@ -47,24 +47,41 @@ class DashAIChat(Dash):
         self._register_callbacks()
         self._register_clientside_callbacks()
 
-    # --- Layout Factories ---
+    # --- Layout Components ---
+    def header(self):
+        """App header with navigation toggle button.
+
+        Override to add branding, user menu, or other header elements.
+        """
+        burger_menu = html.Button(
+            "☰",
+            id="burger_menu",
+            className="burger-menu",
+        )
+        return html.Div([burger_menu])
+
     def sidebar(self):
-        return dbc.Offcanvas(
+        """Sidebar panel with conversations and new chat button.
+
+        Override to add tabs, settings, or reorganize navigation.
+        """
+        new_chat_button = html.Div(
             [
-                html.Div(
-                    [
-                        html.I(className="bi bi-pencil-square icon-new-chat"),
-                        " New chat",
-                    ],
-                    id="new_chat_button",
-                    className="new-chat-button",
-                ),
-                html.Div(
-                    id="conversation_list",
-                    children=[],
-                    className="conversation-list",
-                ),
+                html.I(className="bi bi-pencil-square icon-new-chat"),
+                " New chat",
             ],
+            id="new_chat_button",
+            className="new-chat-button",
+        )
+
+        conversations = html.Div(
+            id="conversation_list",
+            children=[],
+            className="conversation-list",
+        )
+
+        return dbc.Offcanvas(
+            [new_chat_button, conversations],
             id="sidebar_offcanvas",
             is_open=False,
             backdrop=False,
@@ -73,63 +90,63 @@ class DashAIChat(Dash):
         )
 
     def chat_area(self):
+        """Main conversation display area.
+
+        Override to add message filtering, search, or custom message rendering.
+        """
         return html.Div(
-            id="chat_area_div",
-            children=[],
-            className="chat-area-div",
+            [
+                html.Div(
+                    id="chat_area_div",
+                    children=[],
+                    className="chat-area-div",
+                )
+            ],
+            className="col-lg-7 col-md-12 mx-auto mt-4 px-4",
         )
 
     def input_area(self):
+        """Message input area.
+
+        Override to add send buttons, attachment tools, or formatting options.
+        """
+        textarea = dbc.Textarea(
+            id="user_input_textarea",
+            placeholder="Ask...",
+            rows=4,
+            autoFocus=True,
+            className="form-control user-input-textarea",
+        )
         return html.Div(
-            [
-                dbc.Textarea(
-                    id="user_input_textarea",
-                    placeholder="Ask...",
-                    rows=4,
-                    autoFocus=True,
-                    className="form-control user-input-textarea",
-                ),
-            ]
+            [textarea],
+            className="col-lg-7 col-md-12 mx-auto",
         )
 
     def default_layout(self):
+        """Default app layout with flat, hackable structure.
+
+        Components are organized as independent, easily customizable sections:
+        - header(): Navigation and branding area
+        - sidebar(): Conversations and navigation panel
+        - chat_area(): Main conversation display (with loading)
+        - input_area(): Message input section
+
+        Override this method or individual components to customize the layout.
+        """
         return html.Div(
             [
-                html.Button(
-                    "☰",
-                    id="burger_menu",
-                    className="burger-menu",
-                ),
-                self.sidebar(),
                 dcc.Location(id="url", refresh=False),
-                html.Div(
-                    [
-                        html.Br(),
-                        html.Div(
-                            [
-                                html.Div(
-                                    [
-                                        dcc.Loading(
-                                            self.chat_area(),
-                                            type="circle",
-                                            overlay_style={
-                                                "visibility": "visible",
-                                                "filter": "blur(0.7px)",
-                                            },
-                                        )
-                                    ],
-                                    className="col",
-                                )
-                            ],
-                            className="row",
-                        ),
-                        html.Div(
-                            [html.Div([self.input_area()], className="col")],
-                            className="row",
-                        ),
-                    ],
-                    className="container main-container",
+                self.header(),
+                self.sidebar(),
+                dcc.Loading(
+                    self.chat_area(),
+                    type="circle",
+                    overlay_style={
+                        "visibility": "visible",
+                        "filter": "blur(0.7px)",
+                    },
                 ),
+                self.input_area(),
             ]
         )
 
