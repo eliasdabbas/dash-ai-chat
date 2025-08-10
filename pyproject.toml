@@ -1,7 +1,7 @@
 [project]
 name = "dash-ai-chat"
 version = "0.0.4"
-description = "A customizable LLM chat UI framework built on Plotly Dash"
+description = "A customizable LLM chat UI framework built on Plotly's Dash"
 readme = "README.md"
 license = {text = "MIT"}
 authors = [
