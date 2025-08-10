@@ -4,7 +4,7 @@
 [![Python 3.9+](https://img.shields.io/badge/python-3.9+-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-A highly customizable LLM chat UI framework built on Plotly Dash. Create beautiful, interactive chat interfaces for your AI applications with minimal code.
+> Stop building chat UIs from scratch every time. Get a fully-functional AI chat interface with 3 lines of code, then infinitely customize and extend without starting over every time.
 
 ## ✨ Key Features
 
@@ -37,34 +37,6 @@ if __name__ == "__main__":
 
 That's it! Visit `http://localhost:8050` to start chatting.
 
-## Provider Support
-
-Install optional dependencies for different AI providers:
-
-```bash
-# OpenAI (GPT models)
-pip install dash-ai-chat[openai]
-
-# Anthropic (Claude models)  
-pip install dash-ai-chat[anthropic]
-
-# Google Gemini
-pip install dash-ai-chat[gemini]
-
-# All providers
-pip install dash-ai-chat[openai,anthropic,gemini]
-```
-
-## What is it?
-
-The `dash-ai-chat` library is a Dash app distributed as a Python package.
-
-It contains basic UI elements and data persistence logic, and designed to be entirely customizable.
-
-The default implementation contains only the essential elements with basic defaults, and pretty much everything is designed to be customized and changed.
-
-Additional interactivity can easily be introduced using standard Dash callbacks. If you know Dash, it should be easy to pick up.
-
 ## Examples are worth a thousand words!
 
 Explore the comprehensive examples to see what's possible:
@@ -96,6 +68,34 @@ pip install -e .[openai,anthropic,gemini]
 # Try any example
 python examples/00_minimal_chat.py
 ```
+
+## Provider Support
+
+Install optional dependencies for different AI providers:
+
+```bash
+# OpenAI (GPT models)
+pip install dash-ai-chat[openai]
+
+# Anthropic (Claude models)
+pip install dash-ai-chat[anthropic]
+
+# Google Gemini
+pip install dash-ai-chat[gemini]
+
+# All providers
+pip install dash-ai-chat[openai,anthropic,gemini]
+```
+
+## What is it?
+
+The `dash-ai-chat` library is a Dash app distributed as a Python package.
+
+It contains basic UI elements and data persistence logic, and designed to be entirely customizable.
+
+The default implementation contains only the essential elements with basic defaults, and pretty much everything is designed to be customized and changed.
+
+Additional interactivity can easily be introduced using standard Dash callbacks. If you know Dash, it should be easy to pick up.
 
 ## Core API
 
