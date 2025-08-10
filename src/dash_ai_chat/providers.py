@@ -37,26 +37,6 @@ class OpenAIChatCompletions:
         return [{"role": m["role"], "content": m["content"]} for m in history]
 
 
-class OpenAIResponses:
-    """OpenAI completions provider (legacy)."""
-
-    def client_factory(self):
-        """Create OpenAI client from OPENAI_API_KEY env var."""
-        return OpenAI(api_key=os.environ["OPENAI_API_KEY"])
-
-    def call(self, client, formatted_prompt, model, **kwargs):
-        """Call OpenAI completions API."""
-        return client.completions.create(model=model, prompt=formatted_prompt, **kwargs)
-
-    def extract(self, response):
-        """Extract text from response."""
-        return response.choices[0].text
-
-    def format_messages(self, history):
-        """Format message history as prompt string."""
-        return "\n".join(f"{m['role']}: {m['content']}" for m in history)
-
-
 class GeminiChatCompletions:
     """Google Gemini chat completions provider."""
 
@@ -107,11 +87,161 @@ class AnthropicChatCompletions:
         return [{"role": m["role"], "content": m["content"]} for m in history]
 
 
+class OllamaChat:
+    """Ollama chat provider."""
+
+    def client_factory(self):
+        """Create Ollama client."""
+        from ollama import Client
+
+        return Client()
+
+    def call(self, client, messages, model, **kwargs):
+        """Call Ollama chat API."""
+        return client.chat(model=model, messages=messages, **kwargs)
+
+    def extract(self, response):
+        """Extract message content from response."""
+        return response["message"]["content"]
+
+    def format_messages(self, history):
+        """Format message history for API."""
+        return [{"role": m["role"], "content": m["content"]} for m in history]
+
+
+class GroqChatCompletions:
+    """Groq chat completions provider."""
+
+    def client_factory(self):
+        """Create Groq client from GROQ_API_KEY env var."""
+        from groq import Groq
+
+        return Groq(api_key=os.environ["GROQ_API_KEY"])
+
+    def call(self, client, messages, model, **kwargs):
+        """Call Groq chat completions API."""
+        return client.chat.completions.create(model=model, messages=messages, **kwargs)
+
+    def extract(self, response):
+        """Extract message content from response."""
+        return response["choices"][0]["message"]["content"]
+
+    def format_messages(self, history):
+        """Format message history for API."""
+        return [{"role": m["role"], "content": m["content"]} for m in history]
+
+
+class CohereChat:
+    """Cohere chat provider."""
+
+    def client_factory(self):
+        """Create Cohere client from COHERE_API_KEY env var."""
+        from cohere import Client
+
+        return Client(api_key=os.environ["COHERE_API_KEY"])
+
+    def call(self, client, messages, model, **kwargs):
+        """Call Cohere chat API."""
+        chat_history = messages[:-1]
+        message = messages[-1]["content"]
+        return client.chat(
+            model=model, message=message, chat_history=chat_history, **kwargs
+        )
+
+    def extract(self, response):
+        """Extract message content from response."""
+        return response.text
+
+    def format_messages(self, history):
+        """Format message history for API."""
+        return [{"role": m["role"], "content": m["content"]} for m in history]
+
+
+class OpenRouterChatCompletions:
+    """OpenRouter chat completions provider."""
+
+    def client_factory(self):
+        """Create OpenRouter client from OPENROUTER_API_KEY env var."""
+        from openai import OpenAI
+
+        return OpenAI(
+            base_url="https://openrouter.ai/api/v1",
+            api_key=os.environ["OPENROUTER_API_KEY"],
+        )
+
+    def call(self, client, messages, model, **kwargs):
+        """Call OpenRouter chat completions API."""
+        return client.chat.completions.create(model=model, messages=messages, **kwargs)
+
+    def extract(self, response):
+        """Extract message content from response."""
+        return response["choices"][0]["message"]["content"]
+
+    def format_messages(self, history):
+        """Format message history for API."""
+        return [{"role": m["role"], "content": m["content"]} for m in history]
+
+
+class DeepSeekChatCompletions:
+    """DeepSeek chat completions provider."""
+
+    def client_factory(self):
+        """Create DeepSeek client from DEEPSEEK_API_KEY env var."""
+        from openai import OpenAI
+
+        return OpenAI(
+            base_url="https://api.deepseek.com/v1",
+            api_key=os.environ["DEEPSEEK_API_KEY"],
+        )
+
+    def call(self, client, messages, model, **kwargs):
+        """Call DeepSeek chat completions API."""
+        return client.chat.completions.create(model=model, messages=messages, **kwargs)
+
+    def extract(self, response):
+        """Extract message content from response."""
+        return response["choices"][0]["message"]["content"]
+
+    def format_messages(self, history):
+        """Format message history for API."""
+        return [{"role": m["role"], "content": m["content"]} for m in history]
+
+
+class QwenChatCompletions:
+    """Qwen (Tongyi Qianwen) chat completions provider."""
+
+    def client_factory(self):
+        """Create Qwen client from DASHSCOPE_API_KEY env var."""
+        from openai import OpenAI
+
+        return OpenAI(
+            base_url="https://dashscope.aliyuncs.com/compatible-mode/v1",
+            api_key=os.environ["DASHSCOPE_API_KEY"],
+        )
+
+    def call(self, client, messages, model, **kwargs):
+        """Call Qwen chat completions API."""
+        return client.chat.completions.create(model=model, messages=messages, **kwargs)
+
+    def extract(self, response):
+        """Extract message content from response."""
+        return response["choices"][0]["message"]["content"]
+
+    def format_messages(self, history):
+        """Format message history for API."""
+        return [{"role": m["role"], "content": m["content"]} for m in history]
+
+
 def build_default_registry():
     """Build the default AI_REGISTRY with all available providers."""
     return {
         "openai:chat.completions": OpenAIChatCompletions(),
-        # "openai:responses": OpenAIResponses(),  # Commented out - fix later
         "gemini:chat.completions": GeminiChatCompletions(),
         "anthropic:chat.completions": AnthropicChatCompletions(),
+        "ollama:chat": OllamaChat(),
+        "groq:chat.completions": GroqChatCompletions(),
+        "cohere:chat": CohereChat(),
+        "openrouter:chat.completions": OpenRouterChatCompletions(),
+        "deepseek:chat.completions": DeepSeekChatCompletions(),
+        "qwen:chat.completions": QwenChatCompletions(),
     }
