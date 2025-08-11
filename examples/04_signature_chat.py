@@ -27,12 +27,12 @@ class SignatureChat(DashAIChat):
                 prompt_tokens = usage.get("prompt_tokens", 0)
                 completion_tokens = usage.get("completion_tokens", 0)
                 total = usage.get("total_tokens", prompt_tokens + completion_tokens)
-                model = response.get("model", "unknown")
+                model = response.get("model", "")
 
                 token_display = f"{prompt_tokens}↑ + {completion_tokens}↓ = {total} tokens | {model}"
                 usage_list.append(token_display)
             else:
-                usage_list.append("")  # No usage data available
+                usage_list.append("")
 
         return usage_list
 
