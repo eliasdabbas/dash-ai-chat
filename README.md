@@ -52,6 +52,8 @@ Explore the comprehensive examples to see what's possible:
 - **[07_interactive_components.py](examples/07_interactive_components.py)** - Embed interactive Dash components like dropdowns and buttons directly into AI responses for enhanced user engagement
 - **[08_corporate_dashboard.py](examples/08_corporate_dashboard.py)** - Complete enterprise-grade dashboard showcasing the extreme customization possibilities with corporate branding, navigation, and multi-panel layouts
 - **[09_zen_minimal.py](examples/09_zen_minimal.py)** - Minimalist design aesthetic demonstrating creative UI possibilities with floating elements, split-screen views, and zen-like simplicity
+- **[10_generate_speech.py](examples/10_generate_speech.py)** - Text-to-speech integration allowing AI responses to be converted to audio with customizable voice options
+- **[11_generate_speech_advanced.py](examples/11_generate_speech_advanced.py)** - Advanced speech generation with voice selection controls and audio playback management features
 
 ### Running Examples
 
