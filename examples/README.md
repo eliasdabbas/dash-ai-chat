@@ -106,22 +106,6 @@ Shows how to add custom UI elements like disclaimers and warnings while preservi
 | ![Provider Selector](screenshots/06_provider_selector.png) | ![Provider Model Selector](screenshots/06_provider_model_selector.png) |
 | Switch between OpenAI, Anthropic, and Gemini providers<br/>Mid-conversation provider changes<br/>Perfect for comparing AI responses and capabilities | Additional model selection within each provider<br/>Fine-grained control over AI behavior<br/>Advanced provider management and configuration |
 
-### Advanced AI Capabilities
-
-#### [10_generate_speech.py](10_generate_speech.py)
-**Text-to-Speech integration - Convert text to natural speech**
-
-![Generate Speech](screenshots/10_generate_speech.png)
-
-Simple text-to-speech integration showing how to extend DashAIChat beyond text-only interactions. Demonstrates the provider pattern for adding new AI capabilities like speech generation, with automatic audio file management and playback.
-
-#### [11_generate_speech_advanced.py](11_generate_speech_advanced.py)
-**Advanced Text-to-Speech with full controls - Professional speech generation with custom UI**
-
-![Advanced Speech Controls](screenshots/11_generate_speech_advanced.png)
-
-Complete text-to-speech application showcasing DashAIChat's flexibility and power. Features sophisticated UI controls for model selection, voice customization, speed adjustment, format selection, and advanced instructions. Perfect example of clean subclassing patterns and custom provider integration with minimal code.
-
 ### Customization Examples
 
 #### [04_signature_chat.py](04_signature_chat.py)
@@ -129,7 +113,7 @@ Complete text-to-speech application showcasing DashAIChat's flexibility and powe
 
 ![Custom Signature](screenshots/04_custom_signature.png)
 
-Demonstrates professional message styling with custom signatures, token usage display, and enhanced formatting. Perfect for busifness applications requiring detailed analytics and professional presentation.
+Demonstrates professional message styling with custom signatures, token usage display, and enhanced formatting. Perfect for business applications requiring detailed analytics and professional presentation.
 
 This is just one way of utilizing the `raw_api_responses.jsonl` file available in every conversation folder.
 
@@ -165,6 +149,22 @@ In case bells and whistles are not your thing.
 ![Minimalist Design](screenshots/09_minimalist_design.png)
 
 Demonstrates creative UI possibilities with floating elements, custom styling, and zen-like simplicity. Shows how completely the interface can be transformed while maintaining all core functionality.
+
+### Advanced AI Capabilities
+
+#### [10_generate_speech.py](10_generate_speech.py)
+**Text-to-Speech integration - Convert text to natural speech**
+
+![Generate Speech](screenshots/10_generate_speech.png)
+
+Simple text-to-speech integration showing how to extend DashAIChat beyond text-only interactions. Demonstrates the provider pattern for adding new AI capabilities like speech generation, with automatic audio file management and playback.
+
+#### [11_generate_speech_advanced.py](11_generate_speech_advanced.py)
+**Advanced Text-to-Speech with full controls - Professional speech generation with custom UI**
+
+![Advanced Speech Controls](screenshots/11_generate_speech_advanced.png)
+
+Complete text-to-speech application showcasing DashAIChat's flexibility and power. Features sophisticated UI controls for model selection, voice customization, speed adjustment, format selection, and advanced instructions. Perfect example of clean subclassing patterns and custom provider integration with minimal code.
 
 ### Customization Patterns
 
