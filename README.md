@@ -8,14 +8,14 @@
 
 ## ✨ Key Features
 
-- **🚀 Quick Setup**: Get a chat UI running in 3 lines of code
-- **🎨 Highly Customizable**: Override any component to match your design
+- **🚀 Quick Setup**: Get a chat app running in 3 lines of code
+- **🎨 Highly Customizable**: Override any component to match your design and functionality
 - **🔌 Multi-Provider Support**: OpenAI, Anthropic, Google Gemini, or any other provider
 - **💾 Persistent Storage**: Chat history saved automatically
 - **📱 Responsive Design**: Works beautifully on desktop and mobile
 - **🎯 Production Ready**: Built on proven Plotly Dash framework
 
-## 🚀 Quick Start
+## Quick Start
 
 ### Installation
 
@@ -197,15 +197,15 @@ class MyCustomProvider:
     def client_factory(self):
         # Create your AI client
         return YourAIClient(api_key="your-key")
-    
+
     def call(self, client, messages, model, **kwargs):
         # Call your AI API
         return client.chat(messages=messages, model=model, **kwargs)
-    
+
     def extract(self, response):
         # Extract text from API response
         return response.choices[0].message.content
-    
+
     def format_messages(self, messages):
         # Format messages for your API
         return messages
