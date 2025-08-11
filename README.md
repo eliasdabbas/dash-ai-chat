@@ -219,4 +219,136 @@ app.AI_REGISTRY["custom:provider"] = MyCustomProvider()
 app.provider_spec = "custom:provider"
 ```
 
+---
+
+# `dash-ai-chat` • Core Lifecycles
+
+Conventions used below:
+
+* **UI** = rendered Dash components
+* **CB** = server callback
+* **Engine** = `DashAIChat` engine methods
+* **Store** = on-disk JSON/JSONL under `BASE_DIR/chat_data/<user_id>/<convo_id>/`
+* **URL** = `dcc.Location(pathname)`
+
+---
+
+## 1) New Chat button → route creation (no I/O yet)
+
+```mermaid
+sequenceDiagram
+  actor U as User
+  participant UI as Sidebar
+  participant CB as handle_new_chat
+  participant Engine as DashAIChat
+  participant URL as dcc.Location
+
+  U->>UI: Click New chat
+  UI->>CB: n_clicks
+  CB->>Engine: get_next_convo_id
+  note over Engine: Computes next 3-digit id
+  Engine-->>CB: next_convo_id
+  CB->>URL: Set pathname
+  CB-->>UI: sidebar_offcanvas = False
+  note over CB,URL: No files created yet
+```
+
+---
+
+## 2) Send message (Enter) → persist + call provider + render
+
+```mermaid
+sequenceDiagram
+  actor U as User
+  participant UI as Textarea
+  participant CB as handle_user_input
+  participant Engine as DashAIChat
+  participant Store as File Store
+  participant Prov as Provider
+
+  U->>UI: Type prompt and press Enter
+  UI->>CB: n_submit + pathname + value
+  CB->>Engine: update_convo
+  activate Engine
+  Engine->>Store: add_message user
+  Engine->>Engine: load_messages
+  Engine->>Prov: fetch_ai_response
+  Prov-->>Engine: raw_response
+  Engine->>Store: append_raw_response
+  Engine->>Engine: extract content
+  Engine->>Store: add_message assistant
+  deactivate Engine
+  CB->>Store: load_messages
+  CB-->>UI: Update chat area and clear input
+  note over UI: Auto-scroll to bottom
+```
+
+---
+
+## 3) Click conversation in sidebar → navigate & close sidebar
+
+```mermaid
+sequenceDiagram
+  actor U as User
+  participant UI as Sidebar (conversation_list)
+  participant CB as toggle_offcanvas_and_navigate()
+  participant URL as dcc.Location
+
+  U->>UI: Click conversation item
+  UI->>CB: pattern-matching Input({type:"conversation-item", index:ALL}.n_clicks)
+  CB->>URL: Replace last path segment with clicked convo id
+  CB-->>UI: sidebar_offcanvas = False
+  note over URL: Path change triggers other callbacks that depend on pathname.
+```
+
+---
+
+## 4) Route change → refresh conversation list (titles)
+
+```mermaid
+sequenceDiagram
+  participant URL as dcc.Location
+  participant CB as update_conversation_list()
+  participant Engine as DashAIChat
+  participant Store as File Store
+  participant UI as Sidebar (conversation_list)
+
+  URL-->>CB: pathname (e.g., "/<user>/<convo>")
+  CB->>Engine: get_conversation_titles(user)
+  Engine->>Store: list_conversations + load_messages(first message)
+  Engine-->>CB: [{id, title}, ...]
+  CB-->>UI: Render clickable items with ids {type:"conversation-item", index:id}
+```
+
+---
+
+### Notes & edge cases
+
+* If pathname has no `<convo_id>`, `handle_user_input`/`handle_new_chat` compute `get_next_convo_id` on the fly.
+* `update_convo` is the only place that guarantees directories/files exist (via `_ensure_convo_dir`).
+* Files written per conversation:
+
+  * `messages.json` (full history)
+  * `raw_api_responses.jsonl` (raw provider responses)
+  * `metadata.json` (optional)
+* Client-side helpers:
+
+  * Auto-scroll chat area after message render
+  * RTL/LTR detection toggles textarea direction
+
+
+### Storage layout:
+
+```text
+BASE_DIR/
+  chat_data/
+    <user_id>/
+      001/
+        messages.json
+        raw_api_responses.jsonl
+        metadata.json
+      002/
+        ...
+```
+
 **Ready to build amazing AI chat interfaces?** Start with the [examples](examples/) and customize to your heart's content! 🚀
