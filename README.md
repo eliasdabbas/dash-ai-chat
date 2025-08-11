@@ -3,6 +3,7 @@
 [![PyPI version](https://img.shields.io/pypi/v/dash-ai-chat.svg)](https://pypi.org/project/dash-ai-chat/)
 [![Python 3.9+](https://img.shields.io/badge/python-3.9+-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/eliasdabbas/dash-ai-chat)
 
 > Stop building chat UIs from scratch every time. Get a fully-functional AI chat interface with 3 lines of code, then infinitely customize and extend without starting over every time.
 
