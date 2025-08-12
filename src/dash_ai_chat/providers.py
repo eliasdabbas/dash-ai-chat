@@ -167,6 +167,10 @@ class OpenRouterChatCompletions:
         return OpenAI(
             base_url="https://openrouter.ai/api/v1",
             api_key=os.environ["OPENROUTER_API_KEY"],
+            extra_headers={
+                "HTTP-Referer": "DashAI.chat",
+                "X-Title": "DashAIChat",
+            },
         )
 
     def call(self, client, messages, model, **kwargs):
