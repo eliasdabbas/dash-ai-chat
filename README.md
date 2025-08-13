@@ -7,6 +7,8 @@
 
 > Stop building chat UIs from scratch every time. Get a fully-functional AI chat interface with 3 lines of code, then infinitely customize and extend without starting over every time.
 
+_This package is fully functional and ready for testing and simple implementations, but not yet for production environments. If you have any suggestions for improvements please submit an issue._
+
 ## ✨ Key Features
 
 - **🚀 Quick Setup**: Get a chat app running in 3 lines of code
